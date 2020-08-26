@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <libgen.h>
 #include <string.h>
+#include <unistd.h>
 
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
@@ -43,10 +44,11 @@ Sketch **read_sketches(char *file)
 	sketches[num_sketches]->sketch_num = num_sketches;
 	sketches[num_sketches]->lines = (char **)malloc(sizeof(char *));
 
-	fp = fopen("./sketches/arduino-sketch.cpp", "r");
+	fp = fopen(file, "r");
 
 	if (fp == NULL)
 	{
+		fprintf(stderr, "no such file %s\n", file);
 		exit(EXIT_FAILURE);
 	}
 
@@ -253,7 +255,7 @@ bool write_out_cpp(Sketch **sketches, char *location)
 	return true;
 }
 
-void write_main_cpp(Sketch **sketches, char *output)
+void write_main_cpp(Sketch **sketches, char *output, char *template)
 {
 	FILE *in, *out;
 	ssize_t read;
@@ -266,12 +268,13 @@ void write_main_cpp(Sketch **sketches, char *output)
 	char *func_ptrs_epilogue = "\n};\n\n";
 	char *task_name_array_prologue = "const char *taskNames[] = {\n";
 	char *task_name_array_epilogue = "\n};\n";
-	
-	in = fopen("./templates/msp432/main.template", "r");
+
+	in = fopen(template, "r");
 	out = fopen(output, "w");
 
 	if (in == NULL || out == NULL)
 	{
+		fprintf(stderr, "Failed to open input or output file\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -356,7 +359,7 @@ void write_main_cpp(Sketch **sketches, char *output)
 	}
 
 	fwrite(func_ptrs_epilogue, 1, strlen(func_ptrs_epilogue), out);
-	
+
 	/* 
 	 * Write out task name array.
 	 */
@@ -386,7 +389,7 @@ void write_main_cpp(Sketch **sketches, char *output)
 		i++;
 	}
 	fwrite(task_name_array_epilogue, 1, strlen(task_name_array_epilogue), out);
-	
+
 	/* 
 	 * Write out the rest of the file.
 	 */
@@ -394,17 +397,97 @@ void write_main_cpp(Sketch **sketches, char *output)
 	{
 		fwrite(line, 1, strlen(line), out);
 	}
-
 }
 
-int main()
+void usage(char *name)
+{
+	fprintf(stderr, "Usage: %s -s [file...] -t [template...]\n", name);
+}
+
+int main(int argc, char *argv[])
 {
 	char **lines = NULL;
 	int num_lines = 0, i;
 	Sketch **sketches;
+	char *sketch_file = NULL;
+	char *sketch_dir = NULL;
+	char *template = NULL;
+	char *main_file = NULL;
+	bool opt_error = false;
+	int opt;
+	FILE *fp;
+
+	while ((opt = getopt(argc, argv, "s:t:o:")) != -1)
+	{
+		switch (opt)
+		{
+		case 's':
+			sketch_file = optarg;
+			break;
+		case 't':
+			template = optarg;
+			break;
+		case 'o':
+			main_file = optarg;
+			break;
+		default:
+			usage(argv[0]);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	if (!sketch_file)
+	{
+		fprintf(stderr, "-s is mandetory!\n");
+		opt_error = true;
+	}
+
+	if (!template)
+	{
+		fprintf(stderr, "-t is mandetory!\n");
+		opt_error = true;
+	}
+
+	if (!main_file)
+	{
+		fprintf(stderr, "-o is mandetory!\n");
+		opt_error = true;
+	}
+
+	if (opt_error)
+	{
+		usage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if (access(sketch_file, R_OK) < 0)
+	{
+		fprintf(stderr, "%s no such file\n", sketch_file);
+		opt_error = true;
+	}
+
+	if (fp = fopen(main_file, "w") == NULL)
+	{
+		fprintf(stderr, "%s no such directory\n", main_file);
+		opt_error = true;
+	} else {
+		fclose(fp);
+	}
+
+	if (access(template, R_OK) < 0)
+	{
+		fprintf(stderr, "%s no such file\n", template);
+		opt_error = true;
+	}
+
+	if (opt_error)
+	{
+		usage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
 
 	printf("========== Reading sketchfile =========\n");
-	sketches = read_sketches("./sketches/arduino-sketch.cpp");
+	sketches = read_sketches(sketch_file);
 
 	i = 0;
 	while (sketches[i] != NULL)
@@ -421,6 +504,6 @@ int main()
 		i++;
 	}
 
-	write_out_cpp(sketches, "./sketches/test_output_sketch.cpp");
-	write_main_cpp(sketches, "./sketches/test_output_main.cpp");
+	write_out_cpp(sketches, sketch_file);
+	write_main_cpp(sketches, main_file, template);
 }
