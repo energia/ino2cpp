@@ -1,14 +1,24 @@
-CC		:= gcc
-CFLAGS	:= -Wall -Wextra -g -Os 
+ifeq ($(OS),Windows_NT)
+	_OS := windows
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		_OS := linux
+	endif
+	ifeq ($(UNAME_S),Darwin)
+		_OS := macos
+	endif
+endif
 
+CC		:= gcc
+CFLAGS		:= -Wall -Wextra -g -Os 
 BIN		:= bin
 SRC		:= src
 INCLUDE	:= include
-LIB		:= lib/libpcre2
-
+LIB		:= lib/libpcre2/$(_OS)
 LIBRARIES	:= -lpcre2-8
 
-ifeq ($(OS),Windows_NT)
+ifeq ($(_OS),windows)
 EXECUTABLE	:= ino2cpp.exe
 SOURCEDIRS	:= $(SRC)
 INCLUDEDIRS	:= $(INCLUDE)
@@ -29,6 +39,7 @@ OBJECTS		:= $(SOURCES:.c=.o)
 all: $(BIN)/$(EXECUTABLE)
 
 test: 
+	@echo $(OS)
 	@echo $(CINCLUDES)
 	@echo $(OBJECTS)
 	@echo $(SOURCES)
