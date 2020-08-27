@@ -7,9 +7,14 @@
 #include <libgen.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
+
+/*
+** Globals
+*/
 
 typedef struct
 {
@@ -22,6 +27,48 @@ typedef struct
 	char *setup_name;
 	char *loop_name;
 } Sketch;
+
+/*
+** Debug output
+*/
+#define DEBUG 0
+#define DEBUG_SKETCH 1
+
+void dbg_printf(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
+}
+
+void dbg_print_sketch(Sketch **sketches)
+{
+	int i=0, j=0;
+	while (sketches[i] != NULL)
+	{
+		while(sketches[i]->lines[j] != NULL)
+		{
+			fprintf(stderr, "%s", sketches[i]->lines[j]);
+			j++;
+		}
+		i++;
+	}
+}
+
+#define TRACE_SKETCH(x)         \
+	do                          \
+	{                           \
+		if (DEBUG_SKETCH)       \
+			dbg_print_sketch x; \
+	} while (0)
+
+#define TRACE(x)          \
+	do                    \
+	{                     \
+		if (DEBUG)        \
+			dbg_printf x; \
+	} while (0)
 
 Sketch **read_sketches(char *file)
 {
@@ -48,17 +95,18 @@ Sketch **read_sketches(char *file)
 
 	if (fp == NULL)
 	{
-		fprintf(stderr, "no such file %s\n", file);
+		TRACE(("no such file %s\n", file));
 		exit(EXIT_FAILURE);
 	}
 
 	while ((read = getline(&line, &len, fp)) != -1)
 	{
-		if (strstr(line, "#line 1"))
+		if (strstr(line, "#line 1 "))
 		{
 			/* Terminate Sketch with a NULL line */
 			sketches[num_sketches]->lines = (char **)realloc(sketches[num_sketches]->lines, sizeof(char *) * (line_num + 1));
 			sketches[num_sketches]->lines[line_num] = NULL;
+
 			num_sketches++;
 			line_num = 0;
 			sketches = realloc(sketches, sizeof(Sketch *) * (num_sketches + 1));
@@ -149,7 +197,7 @@ char *find_by_regex(char **lines, char *pattern)
 		}
 
 		// lines[i][strcspn(lines[i], "\r\n")] = 0;
-		printf("Match on line #%d: => %s", i, lines[i]);
+		TRACE(("Match on line #%d: => %s", i, lines[i]));
 
 		ovector = pcre2_get_ovector_pointer(match_data);
 
@@ -193,7 +241,7 @@ char *find_by_regex(char **lines, char *pattern)
 		match = malloc(len + 1);
 		match[len] = '\0';
 		strncpy(match, lines[i] + ovector[2 * n], len);
-		printf("%s\n", match);
+		TRACE(("%s\n", match));
 		break;
 	}
 
@@ -274,7 +322,7 @@ void write_main_cpp(Sketch **sketches, char *output, char *template)
 
 	if (in == NULL || out == NULL)
 	{
-		fprintf(stderr, "Failed to open input or output file\n");
+		TRACE(("Failed to open input or output file\n"));
 		exit(EXIT_FAILURE);
 	}
 
@@ -297,7 +345,7 @@ void write_main_cpp(Sketch **sketches, char *output, char *template)
 		fwrite(line, 1, strlen(line), out);
 		if (strstr(line, magic))
 		{
-			printf("Found magic insertion point\n");
+			TRACE(("Found magic insertion point\n"));
 			break;
 		}
 	}
@@ -401,7 +449,7 @@ void write_main_cpp(Sketch **sketches, char *output, char *template)
 
 void usage(char *name)
 {
-	fprintf(stderr, "Usage: %s -s [file...] -t [template...]\n", name);
+	fprintf(stdout, "Usage: %s -s [file...] -t [template...]\n", name);
 }
 
 int main(int argc, char *argv[])
@@ -470,7 +518,9 @@ int main(int argc, char *argv[])
 	{
 		fprintf(stderr, "%s no such directory\n", main_file);
 		opt_error = true;
-	} else {
+	}
+	else
+	{
 		fclose(fp);
 	}
 
@@ -486,20 +536,21 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	printf("========== Reading sketchfile =========\n");
+	TRACE(("========== Reading sketchfile =========\n"));
 	sketches = read_sketches(sketch_file);
+	TRACE_SKETCH((sketches));
 
 	i = 0;
 	while (sketches[i] != NULL)
 	{
-		printf("========= Processing Sketch %d =========\n", i);
-		printf("Number of lines: %d\n", sketches[i]->num_lines);
+		TRACE(("========= Processing Sketch %d =========\n", i));
+		TRACE(("Number of lines: %d\n", sketches[i]->num_lines));
 
 		process_sketch(sketches[i]);
 
 		if (sketches[i]->has_tupple)
 		{
-			printf("has tupple\n");
+			TRACE(("has tupple\n"));
 		}
 		i++;
 	}
