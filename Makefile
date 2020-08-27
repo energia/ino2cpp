@@ -1,10 +1,10 @@
 CC		:= gcc
-CFLAGS	:= -Wall -Wextra -g -O0 
+CFLAGS	:= -Wall -Wextra -g -Os 
 
 BIN		:= bin
 SRC		:= src
 INCLUDE	:= include
-LIB		:= lib
+LIB		:= lib/libpcre2
 
 LIBRARIES	:= -lpcre2-8
 
@@ -45,8 +45,8 @@ run: all
 	./$(BIN)/$(EXECUTABLE)
 
 $(OBJECTS): $(SOURCES)
-	$(CC) -c $(CFLAGS) $(CINCLUDES) $(CLIBS) -Ilib/libpcre2/ $^ -o $@ $(LIBRARIES)
+	$(CC) -c $(CFLAGS) $(CINCLUDES) $^ -o $@
 
 $(BIN)/$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(CFLAGS) $(CINCLUDES) $(CLIBS) -Ilib/libpcre2/ $^ -o $@ $(LIBRARIES)
+	$(CC) $(CFLAGS) $(CLIBS) $^ -o $@ $(LIBRARIES)
 
