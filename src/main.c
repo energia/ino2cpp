@@ -122,15 +122,15 @@ Sketch **read_sketches(char *file)
 			char *name = basename(line);
 			char *ext = strrchr(name, '.');
 			*ext = '\0';
-			sketches[num_sketches]->sketch_name = malloc(strlen(name));
-			memcpy(sketches[num_sketches]->sketch_name, name, strlen(name));
+			sketches[num_sketches]->sketch_name = malloc(strlen(name) + 1);
+			memcpy(sketches[num_sketches]->sketch_name, name, strlen(name) + 1);
 		}
 
 		sketches[num_sketches]->lines = (char **)realloc(sketches[num_sketches]->lines, sizeof(char *) * (line_num + 1));
 
 		sketches[num_sketches]->lines[line_num] = malloc(read+1);
 		sketches[num_sketches]->lines[line_num][read] = '\0';
-		strcpy(sketches[num_sketches]->lines[line_num], line);
+		strncpy(sketches[num_sketches]->lines[line_num], line, read);
 		sketches[num_sketches]->num_lines++;
 		free(line);
 		line = NULL;
@@ -539,7 +539,6 @@ int main(int argc, char *argv[])
 
 	TRACE(("========== Reading sketchfile =========\n"));
 	sketches = read_sketches(sketch_file);
-	TRACE_SKETCH((sketches));
 
 	i = 0;
 	while (sketches[i] != NULL)
