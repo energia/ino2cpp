@@ -76,9 +76,8 @@ Sketch **read_sketches(char *file)
 	ssize_t read;
 	size_t len = 0;
 	char *line = NULL;
-	char **lines;
 	int line_num = 0;
-	int i, num_sketches = 0;
+	int num_sketches = 0;
 	Sketch **sketches;
 
 	sketches = malloc(sizeof(Sketch *));
@@ -152,13 +151,12 @@ Sketch **read_sketches(char *file)
 	return sketches;
 }
 
-char *find_by_regex(char **lines, char *pattern)
+char *find_by_regex(char **lines, const unsigned char *pattern)
 {
-	int i, j;
+	int i;
 	int namecount;
 	int rc;
 	int name_entry_size;
-	PCRE2_SPTR tabptr;
 	PCRE2_SPTR name_table;
 	PCRE2_SIZE erroroffset;
 	PCRE2_SIZE *ovector;
@@ -455,15 +453,12 @@ void usage(char *name)
 
 int main(int argc, char *argv[])
 {
-	char **lines = NULL;
-	int num_lines = 0, i;
+	int i, opt;
 	Sketch **sketches;
 	char *sketch_file = NULL;
-	char *sketch_dir = NULL;
 	char *template = NULL;
 	char *main_file = NULL;
 	bool opt_error = false;
-	int opt;
 	FILE *fp;
 
 	while ((opt = getopt(argc, argv, "s:t:o:")) != -1)
@@ -515,7 +510,7 @@ int main(int argc, char *argv[])
 		opt_error = true;
 	}
 
-	if (fp = fopen(main_file, "w") == NULL)
+	if ((fp = fopen(main_file, "w")) == NULL)
 	{
 		fprintf(stderr, "%s no such directory\n", main_file);
 		opt_error = true;
