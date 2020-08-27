@@ -128,7 +128,8 @@ Sketch **read_sketches(char *file)
 
 		sketches[num_sketches]->lines = (char **)realloc(sketches[num_sketches]->lines, sizeof(char *) * (line_num + 1));
 
-		sketches[num_sketches]->lines[line_num] = malloc(read);
+		sketches[num_sketches]->lines[line_num] = malloc(read+1);
+		sketches[num_sketches]->lines[line_num][read] = '\0';
 		strcpy(sketches[num_sketches]->lines[line_num], line);
 		sketches[num_sketches]->num_lines++;
 		free(line);
