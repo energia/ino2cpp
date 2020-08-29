@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "args": ["-s", "./sketches/arduino-sketch.cpp", "-t", "templates/msp432/main.template", "-o", "./sketches/main.cpp"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "gdb",
+                "program": "${workspaceFolder}/bin/ino2cpp"
+            },
+            "osx": {
+                "MIMode": "lldb",
+                "program": "${workspaceFolder}/bin/ino2cpp"
+            },
+            "windows": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "gdb.exe",
+                "program": "${workspaceFolder}/bin/ino2cpp.exe"
+            },
+            "preLaunchTask": "build",
+        }
+    ]
+}

@@ -1,7 +1,4 @@
-.vscode
 /bin
 /src/*.o*
 /sketches/test_output*
 /**/*.bak
-/lib
-/include
