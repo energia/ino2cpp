@@ -117,12 +117,19 @@ Sketch **read_sketches(char *file)
 			sketches[num_sketches]->loop_name = NULL;
 			sketches[num_sketches]->sketch_num = num_sketches;
 			sketches[num_sketches]->lines = (char **)malloc(sizeof(char *));
-			/* Get the Sketch name from the path */
-			char *name = basename(line);
+			/* 
+			 * Get the Sketch name from the path.
+			 * A copy of line is made here because basename in Linux
+			 * behaves differently than in macOS.
+			 */
+			char *line_copy = malloc(strlen(line) + 1);
+			strcpy(line_copy, line);
+			char *name = basename(line_copy);
 			char *ext = strrchr(name, '.');
 			*ext = '\0';
 			sketches[num_sketches]->sketch_name = malloc(strlen(name) + 1);
 			memcpy(sketches[num_sketches]->sketch_name, name, strlen(name) + 1);
+			free(line_copy);
 		}
 
 		sketches[num_sketches]->lines = (char **)realloc(sketches[num_sketches]->lines, sizeof(char *) * (line_num + 1));
