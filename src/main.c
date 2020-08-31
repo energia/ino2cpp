@@ -74,8 +74,8 @@ Sketch **read_sketches(char *file)
 {
 	FILE *fp;
 	ssize_t read;
-	size_t len = 0;
 	char *line = NULL;
+	char line_buffer[LINE_MAX];
 	int line_num = 0;
 	int num_sketches = 0;
 	Sketch **sketches;
@@ -98,8 +98,9 @@ Sketch **read_sketches(char *file)
 		exit(EXIT_FAILURE);
 	}
 
-	while ((read = getline(&line, &len, fp)) != -1)
+	while((line = fgets(line_buffer, LINE_MAX, fp)) != NULL)
 	{
+		read = strlen(line);
 		if (strstr(line, "#line 1 "))
 		{
 			/* Terminate Sketch with a NULL line */
@@ -138,8 +139,6 @@ Sketch **read_sketches(char *file)
 		sketches[num_sketches]->lines[line_num][read] = '\0';
 		strncpy(sketches[num_sketches]->lines[line_num], line, read);
 		sketches[num_sketches]->num_lines++;
-		free(line);
-		line = NULL;
 
 		line_num++;
 	}
