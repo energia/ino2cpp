@@ -400,7 +400,7 @@ void write_main_cpp(Sketch **sketches, char *output, char *template)
 			}
 			else
 			{
-				fprintf(out, "\t{setup%s, loop%s}", sketches[i]->setup_name, sketches[i]->loop_name);
+				fprintf(out, "\t{%s, %s}", sketches[i]->setup_name, sketches[i]->loop_name);
 			}
 
 			if (j < num_sketches)
