@@ -12,6 +12,9 @@
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
 
+#ifndef LINE_MAX
+#define LINE_MAX 2048L
+#endif
 /*
 ** Globals
 */
@@ -44,10 +47,10 @@ void dbg_printf(const char *fmt, ...)
 
 void dbg_print_sketch(Sketch **sketches)
 {
-	int i=0, j=0;
+	int i = 0, j = 0;
 	while (sketches[i] != NULL)
 	{
-		while(sketches[i]->lines[j] != NULL)
+		while (sketches[i]->lines[j] != NULL)
 		{
 			fprintf(stderr, "%s", sketches[i]->lines[j]);
 			j++;
@@ -98,7 +101,7 @@ Sketch **read_sketches(char *file)
 		exit(EXIT_FAILURE);
 	}
 
-	while((line = fgets(line_buffer, LINE_MAX, fp)) != NULL)
+	while ((line = fgets(line_buffer, LINE_MAX, fp)) != NULL)
 	{
 		read = strlen(line);
 		if (strstr(line, "#line 1 "))
@@ -135,7 +138,7 @@ Sketch **read_sketches(char *file)
 
 		sketches[num_sketches]->lines = (char **)realloc(sketches[num_sketches]->lines, sizeof(char *) * (line_num + 1));
 
-		sketches[num_sketches]->lines[line_num] = malloc(read+1);
+		sketches[num_sketches]->lines[line_num] = malloc(read + 1);
 		sketches[num_sketches]->lines[line_num][read] = '\0';
 		strncpy(sketches[num_sketches]->lines[line_num], line, read);
 		sketches[num_sketches]->num_lines++;
@@ -311,11 +314,11 @@ bool write_out_cpp(Sketch **sketches, char *location)
 void write_main_cpp(Sketch **sketches, char *output, char *template)
 {
 	FILE *in, *out;
-	ssize_t read;
-	size_t len = 0;
 	int num_sketches = 0;
 	int i = 0, j = 0;
 	char *line = NULL;
+	char line_buffer[LINE_MAX];
+
 	char *magic = "769d20fcd7a0eedaf64270f591438b01";
 	char *func_ptrs_prologue = "\nvoid (*func_ptr[NUM_SKETCHES][2])(void) = {\n";
 	char *func_ptrs_epilogue = "\n};\n\n";
@@ -344,9 +347,8 @@ void write_main_cpp(Sketch **sketches, char *output, char *template)
 		i++;
 	}
 
-	while ((read = getline(&line, &len, in)) != -1)
+	while ((line = fgets(line_buffer, LINE_MAX, in)) != NULL)
 	{
-		/* read / write the file up to the magic insertion point. */
 		fwrite(line, 1, strlen(line), out);
 		if (strstr(line, magic))
 		{
@@ -446,7 +448,7 @@ void write_main_cpp(Sketch **sketches, char *output, char *template)
 	/* 
 	 * Write out the rest of the file.
 	 */
-	while ((read = getline(&line, &len, in)) != -1)
+	while ((line = fgets(line_buffer, LINE_MAX, in)) != NULL)
 	{
 		fwrite(line, 1, strlen(line), out);
 	}
