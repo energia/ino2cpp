@@ -11,7 +11,7 @@ else
 endif
 
 CC		:= gcc
-CFLAGS		:= -Wall -Wextra -g -Os 
+CFLAGS		:= -Wall -Wextra -g -O0
 BIN		:= bin
 SRC		:= src
 INCLUDE	:= include
