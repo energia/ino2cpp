@@ -14,7 +14,7 @@ CC		:= gcc
 CFLAGS		:= -Wall -Wextra -g -O0
 BIN		:= bin
 SRC		:= src
-INCLUDE	:= include
+INCLUDE	:= include/pcre2
 LIB		:= lib/libpcre2/$(_OS)
 LIBRARIES	:= -lpcre2-8
 
